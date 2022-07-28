@@ -51,15 +51,17 @@ s.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 # Loop para receber pacotes até o fim do tempo de execução
 while True:
     # Armazena o pacote recebido -- o parâmetro de recvfrom é o tamanho do buffer -- 65535 é o máximo
-    # data armazena os dados recebidos -- sender armazena o socket que enviou estes dados
-    data, sender = s.recvfrom(65535)
+    # bytes armazena os dados brutos recebidos -- adress armazena o socket que enviou estes dados
+    # Fonte: https://docs.python.org/3/library/socket.html#socket.socket.recvfrom
+    bytes, address = s.recvfrom(65535)
     # Os dados do pacote estão codificados. Para decodificá-los, é necessário conhecer a estrutura
     # do heaver IPV4, que é a seguinte: https://en.wikipedia.org/wiki/IPv4#Header
     # (considerando que estamos capturando apenas pacotes trafegando via IPV4).
     # A nós, interessa apenas: o protocolo da camada de aplicação, ip de origem, ip de destino,
     # porta de origem e porta de destino.
-    # O protocolo está localizado no byte 9 do header IPV4:
-    app_protocol = 
+    # O protocolo está localizado/contido no byte 9 do header IPV4:
+    app_protocol = bytes[9]
+    print(app_protocol)
 
 # Chamada de sistema -- desabilita o modo promísuco
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
