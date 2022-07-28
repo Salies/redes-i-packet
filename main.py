@@ -66,10 +66,11 @@ while True:
     # a sessão de dados brutos, que também nos interessa. A distância entre o fim do cabeçalho e o início dos dados
     # brutos varia conforme o protocolo de transporte.
     # O tamanho do cabeçalho do IP está na segunda metade do primeiro byte do cabeçalho do IPV4.
-    version, ihl = bytes[0][:1], bytes[0][1:2]
-    print(version, ihl)
+    ihl = bytes[0] & 0x0F
+    print(ihl)
     # O protocolo de transporte está localizado/contido no byte 9 do header IPV4:
     t_proto = bytes[9]
+    print(t_proto)
 
 # Chamada de sistema -- desabilita o modo promísuco
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
