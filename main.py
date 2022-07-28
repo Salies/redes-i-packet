@@ -55,13 +55,21 @@ while True:
     # Fonte: https://docs.python.org/3/library/socket.html#socket.socket.recvfrom
     bytes, address = s.recvfrom(65535)
     # Os dados do pacote estão codificados. Para decodificá-los, é necessário conhecer a estrutura
-    # do heaver IPV4, que é a seguinte: https://en.wikipedia.org/wiki/IPv4#Header
+    # do frame Ethernet tipo II, mais precisamente de sua parte de dados, que é o que estamos tratando.
+    # (imagem Raw-Ethernet-packet-structure.png).
+    # A nós interessa a estrutura do header IP e o "raw data" (dados brutos). Para saber o caráter do pacote
+    # recebido, primeiramente trataremos do header do IP (no caso, IPV4),
+    # que é a seguinte: https://en.wikipedia.org/wiki/IPv4#Header
     # (considerando que estamos capturando apenas pacotes trafegando via IPV4).
     # A nós, interessa apenas: o protocolo da camada de aplicação, ip de origem, ip de destino,
-    # porta de origem e porta de destino.
-    # O protocolo está localizado/contido no byte 9 do header IPV4:
-    app_protocol = bytes[9]
-    print(app_protocol)
+    # porta de origem e porta de destino. Ademais, precisamos do tamanho do cabeçalho do IP para saber onde começa
+    # a sessão de dados brutos, que também nos interessa. A distância entre o fim do cabeçalho e o início dos dados
+    # brutos varia conforme o protocolo de transporte.
+    # O tamanho do cabeçalho do IP está na segunda metade do primeiro byte do cabeçalho do IPV4.
+    version, ihl = bytes[0][:1], bytes[0][1:2]
+    print(version, ihl)
+    # O protocolo de transporte está localizado/contido no byte 9 do header IPV4:
+    t_proto = bytes[9]
 
 # Chamada de sistema -- desabilita o modo promísuco
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
