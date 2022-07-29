@@ -67,6 +67,21 @@ t_proto_numbers = {
     17: 'UDP'
 }
 
+# Criando estrutura para contar as rajadas por segundo de cada protocolo
+r = {}
+for i in range(t):
+    r[i] = {
+        80: 0,
+        21: 0,
+        25: 0,
+        110: 0,
+        143: 0,
+        23: 0,
+        53: 0,
+        443: 0
+    }
+print(r)
+
 # Loop para receber pacotes até o fim do tempo de execução
 while True:
     # Armazena o pacote recebido -- o parâmetro de recvfrom é o tamanho do buffer -- 65535 é o máximo
