@@ -11,6 +11,7 @@ Daniel Henrique Serezane Pereira
 
 import socket
 import sys
+import struct
 
 # Tenta pegar empo de execução do programa
 try:
@@ -48,12 +49,37 @@ s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
 # Chamada de sistema -- captura todos os pacotres (modo promíscuo ativado)
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
+# Constantes relacionando porta com protocolo de aplicação, para verificação e impressão.
+port_app_proto = {
+    80: 'HTTP',
+    21: 'FTP',
+    25: 'SMTP',
+    110: 'POP3',
+    143: 'IMAP',
+    23: 'Telnet',
+    53: 'DNS',
+    443: 'HTTPS' # coloquei HTTPS também para facilitar encontrar
+}
+
+# Número de protocolo de transporte (TCP e UDP, apenas)
+t_proto_numbers = {
+    6: 'TCP',
+    17: 'UDP'
+}
+
 # Loop para receber pacotes até o fim do tempo de execução
 while True:
     # Armazena o pacote recebido -- o parâmetro de recvfrom é o tamanho do buffer -- 65535 é o máximo
-    # bytes armazena os dados brutos recebidos -- adress armazena o socket que enviou estes dados
+    # pkt_bytes armazena os dados brutos recebidos -- adress armazena o socket que enviou estes dados
     # Fonte: https://docs.python.org/3/library/socket.html#socket.socket.recvfrom
-    bytes, address = s.recvfrom(65535)
+    pkt_bytes, address = s.recvfrom(65535)
+    # Antes de tudo, ignoramos pacotes que não estejam trafegando via TCP ou UDP.
+    # O protocolo de transporte está localizado/contido no byte 9 do header IPV4.
+    # Seu número é definido por uma tabela da IANA:
+    # https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
+    t_proto = pkt_bytes[9]
+    if(t_proto != 6 and t_proto != 17):
+        continue
     # Os dados do pacote estão codificados. Para decodificá-los, é necessário conhecer a estrutura
     # do frame Ethernet tipo II, mais precisamente de sua parte de dados, que é o que estamos tratando.
     # (imagem Raw-Ethernet-packet-structure.png).
@@ -63,14 +89,53 @@ while True:
     # (considerando que estamos capturando apenas pacotes trafegando via IPV4).
     # A nós, interessa apenas: o protocolo da camada de aplicação, ip de origem, ip de destino,
     # porta de origem e porta de destino. Ademais, precisamos do tamanho do cabeçalho do IP para saber onde começa
-    # a sessão de dados brutos, que também nos interessa. A distância entre o fim do cabeçalho e o início dos dados
-    # brutos varia conforme o protocolo de transporte.
+    # a sessão de dados brutos, que também nos interessa. A distância entre o fim do cabeçalho do IP e o início dos dados
+    # brutos varia conforme o protocolo de transporte, pois é o tamanho do cabeçalho deste protocolo (no nosso caso, UDP ou TCP).
+    # Portanto, para pegar as portas, precisaremos saber o tamanho do cabeçalho do protocolo IP.
     # O tamanho do cabeçalho do IP está na segunda metade do primeiro byte do cabeçalho do IPV4.
-    ihl = bytes[0] & 0x0F
-    print(ihl)
-    # O protocolo de transporte está localizado/contido no byte 9 do header IPV4:
-    t_proto = bytes[9]
-    print(t_proto)
+    # Na enorme maioria dos casos, ihl =5, pois o cabeçalho não conterá a seção de opções. Mas é bom aferir mesmo assim.
+    # O tamanho real do cabeçalho é (ihl * 32) bits. No caso, desejamos o valor em bytes, então (ihl * 4) bytes.
+    # Fazendo a operação separado para evitar problemas de conversão.
+    ihl = pkt_bytes[0] & 0x0F
+    ihl *= 4
+    # A partir disso, já conseguimos obter as portas de origem e de destino, pois localizam-se imediatamente após o cabeçalho
+    # do protocolo IP, em sequência (origem, destino), com 2 bytes cada. Novamente, como não preciamos delas para nenhuma operação, já podemos
+    # fazer a conversão direta com o método int.from_bytes -- os bytes estão em bid endian.
+    source_port = int.from_bytes(pkt_bytes[ihl:(ihl + 2)], 'big')
+    destination_port = int.from_bytes(pkt_bytes[(ihl + 2):(ihl + 4)], 'big')
+    # Ignorando portas não padrão/com protocolo que não nos interessa
+    if((source_port not in port_app_proto) and (destination_port not in port_app_proto)):
+        continue
+    # Após termos filtrados os pacotes que não nos interessam, vamos pegar o restante dos dados que queremos.
+    # Cconseguimos obter os IPs de origem e destino a partir do cabeçalho.
+    # Não precisamos dos IPs para nada além do registro, então já convertemos diretamente para string usando o método inet_ntoa.
+    # O IP de origem está entre os bytes 12 e 16 do cabeçalho IPV4.
+    source_ip_address = socket.inet_ntoa(pkt_bytes[12:16])
+    # O IP de destino está entre os bytes 16 e 20 do cabeçalho IPV4.
+    destination_ip_address = socket.inet_ntoa(pkt_bytes[16:20])
+    print(source_ip_address, ":", source_port)
+    print(destination_ip_address, ":", destination_port)
+    print("")
+    # Agora basta pegarmos os dados brutos, os dados de aplicação que estão sendo de fato transmitidos.
+    # A localização deles dependerá do protocolo de transporte.
+    # Se for TCP, precisamos saber o tamanho do header dele, pois é variável (geralemnte entre 20 e 60 bytes).
+    if t_proto == 6:
+        # O tamanho do header do TCP está no primeiro nyble 12º byte após o fim do cabeçalho do IP
+        # Há novamente a questão dos 32 bits, então precisamos multiplicar por 4.
+        tchpl = pkt_bytes[ihl + 12] >> 4
+        tchpl *= 4
+        # Os dados brutos estão logo após o cabeçalho do TCP.
+        raw_data = pkt_bytes[ihl + tchpl:]
+    # O cabeçalho do UDP, por sua vez, possui um tamanho fixo de 8 bytes.
+    elif t_proto == 17:
+        raw_data = pkt_bytes[ihl + 8:]
+    # Basta então, decodificar os dados brutos.
+    # Tento decoficar em UTF-8. Se não for possível, apenas salvo os dados brutos codificados no arquivo de saída.
+    try:
+        raw_data_dec = raw_data.decode('utf-8')
+        print(raw_data_dec)
+    except:
+        print('-')
 
 # Chamada de sistema -- desabilita o modo promísuco
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
