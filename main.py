@@ -11,12 +11,17 @@ Daniel Henrique Serezane Pereira
 
 import socket
 import sys
-import struct
+import time
+from math import floor
+from datetime import datetime
+from os import makedirs
+import matplotlib.pyplot as plt
+from numpy import zeros, uint32
 
 # Tenta pegar tempo de execução do programa
 try:
     t = int(sys.argv[1])
-    if t < 0: 
+    if t <= 0: 
         print("ERRO: Número de tempo não válido.")
         sys.exit()
 except ValueError:
@@ -68,22 +73,29 @@ t_proto_numbers = {
 }
 
 # Criando estrutura para contar as rajadas por segundo de cada protocolo
-r = {}
-for i in range(t):
-    r[i] = {
-        80: 0,
-        21: 0,
-        25: 0,
-        110: 0,
-        143: 0,
-        23: 0,
-        53: 0,
-        443: 0
-    }
-print(r)
+ts = t + 1
+r = {
+    80: zeros(ts, dtype=uint32),
+    21: zeros(ts, dtype=uint32),
+    25: zeros(ts, dtype=uint32),
+    110: zeros(ts, dtype=uint32),
+    143: zeros(ts, dtype=uint32),
+    23: zeros(ts, dtype=uint32),
+    53: zeros(ts, dtype=uint32),
+    443: zeros(ts, dtype=uint32)
+}
+
+# Criando uma pasta para salvar os resultados da execução.
+folder = str(datetime.now()).replace(":", ".")
+makedirs(folder)
+# Criando o arquivo texto "dump"
+dumpfile = open(folder + '/dumpfile.txt', 'w')
+dumpfile.write("INICIO\n")
 
 # Loop para receber pacotes até o fim do tempo de execução
-while True:
+start_time = time.time()
+current_time = 0
+while current_time < t:
     # Armazena o pacote recebido -- o parâmetro de recvfrom é o tamanho do buffer -- 65535 é o máximo
     # pkt_bytes armazena os dados brutos recebidos -- adress armazena o socket que enviou estes dados
     # Fonte: https://docs.python.org/3/library/socket.html#socket.socket.recvfrom
@@ -128,6 +140,9 @@ while True:
     source_ip_address = socket.inet_ntoa(pkt_bytes[12:16])
     # O IP de destino está entre os bytes 16 e 20 do cabeçalho IPV4.
     destination_ip_address = socket.inet_ntoa(pkt_bytes[16:20])
+    # Escrevendo os resultados no dump
+    d = "\n---\nProtocolo de transporte do pacote: " + t_proto_numbers[t_proto] + "\nip/porta de origem: " + source_ip_address + ":" + str(source_port)
+    d += "\nip/porta de destino: " + destination_ip_address + ":" + str(destination_port)
     # Agora basta pegarmos os dados brutos, os dados de aplicação que estão sendo de fato transmitidos.
     # A localização deles dependerá do protocolo de transporte.
     # Se for TCP, precisamos saber o tamanho do header dele, pois é variável (geralemnte entre 20 e 60 bytes).
@@ -142,11 +157,31 @@ while True:
     elif t_proto == 17:
         raw_data = pkt_bytes[ihl + 8:]
     # Basta então, decodificar os dados brutos.
+    # Como as rajadas são muito frequentes, e contém pedaços de broadcast de dados, muitas vezes os dados brutos
+    # dos pacotes não são decodificáveis, pois representam o "meio" de alguma informção, sendo necessária bufferização
+    # para uma total "compreensão" dos dados, o que foge ao escopo desta atividade.
     # Tento decoficar em UTF-8. Se não for possível, apenas salvo os dados brutos codificados no arquivo de saída.
     try:
         raw_data = raw_data.decode('utf-8')
     except:
         pass
-
-# Chamada de sistema -- desabilita o modo promísuco
-s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
+    # Grava o pacote no seu determinado espaço de tempo, na sua respectiva porta (protocolo de aplicação)
+    current_time = time.time() - start_time
+    if source_port in port_app_proto:
+        r[source_port][floor(current_time)] += 1
+        d += "\n(origem) protocolo da camada de aplicação: " + port_app_proto[source_port]
+    if destination_port in port_app_proto:
+        r[destination_port][floor(current_time)] += 1
+        d += "\n(destino) protocolo da camada de aplicação: " + port_app_proto[destination_port]
+    d += "\ndados: " + str(raw_data) + "\n---\n"
+    dumpfile.write(d)
+dumpfile.write("\n---\nFIM")
+# Após a captura dos pacotes, basta fecharmos o arquivo e montarmos os gráficos.
+# Eles são salvos em uma pasta -- o nome da pasta é o horário de início da execução do programa,
+# de forma bem precisa, para que não se repita.
+dumpfile.close()
+# Gráficos
+# Aas rajadas de pacotes são capturadas por segundo, para que haja um acúmulo considerável
+# Para cada protocolo de aplicação, plotamos
+for proto in r:
+    print(r[proto])

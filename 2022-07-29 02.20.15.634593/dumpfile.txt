@@ -1,0 +1,39 @@
+INICIO
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:58613
+ip/porta de destino: 162.159.134.234:443
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:58613
+ip/porta de destino: 162.159.134.234:443
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:58613
+ip/porta de destino: 162.159.134.234:443
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:58613
+ip/porta de destino: 162.159.134.234:443
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:49797
+ip/porta de destino: 52.168.112.67:443
+dados: 
+---
+
+---
+FIM
