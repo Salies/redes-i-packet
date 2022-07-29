@@ -117,7 +117,7 @@ while True:
     # A localização deles dependerá do protocolo de transporte.
     # Se for TCP, precisamos saber o tamanho do header dele, pois é variável (geralemnte entre 20 e 60 bytes).
     if t_proto == 6:
-        # O tamanho do header do TCP está no primeiro nyble 12º byte após o fim do cabeçalho do IP
+        # O tamanho do header do TCP está no primeiro nyble 12º byte de seu cabeçalho (que começa assim que o do IP termina).
         # Há novamente a questão dos 32 bits, então precisamos multiplicar por 4.
         tchpl = pkt_bytes[ihl + 12] >> 4
         tchpl *= 4
