@@ -92,6 +92,7 @@ makedirs(folder)
 dumpfile = open(folder + '/dumpfile.txt', 'w')
 dumpfile.write("INICIO\n")
 
+print("Capturando...")
 # Loop para receber pacotes até o fim do tempo de execução
 start_time = time.time()
 current_time = 0
@@ -147,7 +148,8 @@ while current_time < t:
     # A localização deles dependerá do protocolo de transporte.
     # Se for TCP, precisamos saber o tamanho do header dele, pois é variável (geralemnte entre 20 e 60 bytes).
     if t_proto == 6:
-        # O tamanho do header do TCP está no primeiro nyble 12º byte de seu cabeçalho (que começa assim que o do IP termina).
+        # O tamanho do header do TCP está no primeiro nyble 12º byte de seu cabeçalho (Fonte: TCP-Header-Format.png)
+        # (que começa assim que o do IP termina).
         # Há novamente a questão dos 32 bits, então precisamos multiplicar por 4.
         tchpl = pkt_bytes[ihl + 12] >> 4
         tchpl *= 4
@@ -183,6 +185,7 @@ dumpfile.close()
 # Gráficos
 # Aas rajadas de pacotes são capturadas por segundo, para que haja um acúmulo considerável
 # Para cada protocolo de aplicação, plotamos
+print("Captura finalizada. Debug do gráfico:")
 print(r) # debug, mas importante
 for proto in r:
     if (r[proto].any()):
