@@ -191,6 +191,8 @@ for proto in r:
     if (r[proto].any()):
         plt.plot(r[proto], label=port_app_proto[proto])
 plt.legend()
+plt.xlabel("Segundos")
+plt.ylabel("Quantidade de pacotes")
 plt.savefig(folder + "/plot.png")
 # Além de salvar, mostra o gráfico de forma interativa
 plt.show()

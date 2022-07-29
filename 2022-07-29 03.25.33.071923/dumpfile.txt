@@ -1,0 +1,52 @@
+INICIO
+
+---
+Protocolo de transporte do pacote: UDP
+ip/porta de origem: 172.217.162.202:443
+ip/porta de destino: 192.168.0.197:51166
+(origem) protocolo da camada de aplicação: HTTPS
+dados: b'_@\xea.~\xc1 \x9d\x06&\n\xb2y\xcc\xb9\x13\x89\xcc\xdf4\xa8i\x04Dw'
+---
+
+---
+Protocolo de transporte do pacote: UDP
+ip/porta de origem: 142.251.129.138:443
+ip/porta de destino: 192.168.0.197:53189
+(origem) protocolo da camada de aplicação: HTTPS
+dados: b'P\xf6A\xd6\x9f\xdd,\xd0\xe3\xdc\xb9\x18\x06O\xee\xcca\xb2@s\xcd\x18\xee\xc0\xe5\x0b\n\x0c\x1d\xc7\xd0~'
+---
+
+---
+Protocolo de transporte do pacote: UDP
+ip/porta de origem: 192.168.0.197:53189
+ip/porta de destino: 142.251.129.138:443
+(destino) protocolo da camada de aplicação: HTTPS
+dados: b'L$\xf3\xd5v\xc6\x8b\t\x1f:\x06\xf4\x95A\xf5\xc8}V\x8f\xbc\xcf\xa5\x04\xd8\xd6:\xbd\x9a\xe6\xee\xd0\xf0\xe6x"'
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:64656
+ip/porta de destino: 162.159.135.234:443
+(destino) protocolo da camada de aplicação: HTTPS
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: TCP
+ip/porta de origem: 192.168.0.197:64656
+ip/porta de destino: 162.159.135.234:443
+(destino) protocolo da camada de aplicação: HTTPS
+dados: 
+---
+
+---
+Protocolo de transporte do pacote: UDP
+ip/porta de origem: 192.168.0.197:61081
+ip/porta de destino: 142.251.132.238:443
+(destino) protocolo da camada de aplicação: HTTPS
+dados: b'LL%\x86Ay\xa1 \xacC\xc8M\xcf\xbf.\x91\xe1!q>g\x1b\xcd+\xf1k\xc7~v):\xc4\xaa'
+---
+
+---
+FIM
