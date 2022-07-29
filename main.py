@@ -183,5 +183,11 @@ dumpfile.close()
 # Gráficos
 # Aas rajadas de pacotes são capturadas por segundo, para que haja um acúmulo considerável
 # Para cada protocolo de aplicação, plotamos
+print(r) # debug, mas importante
 for proto in r:
-    print(r[proto])
+    if (r[proto].any()):
+        plt.plot(r[proto], label=port_app_proto[proto])
+plt.legend()
+plt.savefig(folder + "/plot.png")
+# Além de salvar, mostra o gráfico de forma interativa
+plt.show()
