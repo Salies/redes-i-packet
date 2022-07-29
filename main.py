@@ -13,7 +13,7 @@ import socket
 import sys
 import struct
 
-# Tenta pegar empo de execução do programa
+# Tenta pegar tempo de execução do programa
 try:
     t = int(sys.argv[1])
     if t < 0: 
@@ -113,9 +113,6 @@ while True:
     source_ip_address = socket.inet_ntoa(pkt_bytes[12:16])
     # O IP de destino está entre os bytes 16 e 20 do cabeçalho IPV4.
     destination_ip_address = socket.inet_ntoa(pkt_bytes[16:20])
-    print(source_ip_address, ":", source_port)
-    print(destination_ip_address, ":", destination_port)
-    print("")
     # Agora basta pegarmos os dados brutos, os dados de aplicação que estão sendo de fato transmitidos.
     # A localização deles dependerá do protocolo de transporte.
     # Se for TCP, precisamos saber o tamanho do header dele, pois é variável (geralemnte entre 20 e 60 bytes).
@@ -132,10 +129,9 @@ while True:
     # Basta então, decodificar os dados brutos.
     # Tento decoficar em UTF-8. Se não for possível, apenas salvo os dados brutos codificados no arquivo de saída.
     try:
-        raw_data_dec = raw_data.decode('utf-8')
-        print(raw_data_dec)
+        raw_data = raw_data.decode('utf-8')
     except:
-        print('-')
+        pass
 
 # Chamada de sistema -- desabilita o modo promísuco
 s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
